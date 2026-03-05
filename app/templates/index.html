@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rice Leaf Disease Classifier</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+            min-height: 100vh;
+            color: #2d3748;
+        }
+
+        header {
+            background: linear-gradient(90deg, #2e7d32, #43a047);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        header .logo { font-size: 2rem; }
+        header h1 { font-size: 1.5rem; font-weight: 700; }
+        header p  { font-size: 0.85rem; opacity: 0.85; }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+        }
+
+        .upload-zone {
+            border: 3px dashed #a5d6a7;
+            border-radius: 12px;
+            padding: 48px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f9fff9;
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: #2e7d32;
+            background: #e8f5e9;
+        }
+
+        .upload-zone .icon { font-size: 3rem; margin-bottom: 12px; }
+        .upload-zone p { color: #666; margin-bottom: 8px; }
+        .upload-zone small { color: #999; font-size: 0.8rem; }
+
+        #fileInput { display: none; }
+
+        #preview-section { display: none; }
+
+        #preview-img {
+            max-width: 100%;
+            max-height: 320px;
+            border-radius: 10px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 20px;
+            border: 2px solid #e8f5e9;
+        }
+
+        .btn {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+        }
+
+        .btn:hover { background: #1b5e20; }
+        .btn:disabled { background: #a5d6a7; cursor: not-allowed; }
+
+        .btn-secondary {
+            background: transparent;
+            color: #2e7d32;
+            border: 2px solid #2e7d32;
+            margin-top: 10px;
+        }
+        .btn-secondary:hover { background: #e8f5e9; }
+
+        #result-section { display: none; }
+
+        .disease-badge {
+            display: inline-block;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+        }
+        .disease-Bacterial-Blight { background: #ffebee; color: #c62828; }
+        .disease-Blast            { background: #fff8e1; color: #f57f17; }
+        .disease-Brown-Spot       { background: #fbe9e7; color: #bf360c; }
+        .disease-Tungro           { background: #e8eaf6; color: #283593; }
+
+        .confidence-bar {
+            background: #e0e0e0;
+            border-radius: 8px;
+            height: 12px;
+            margin: 8px 0;
+            overflow: hidden;
+        }
+        .confidence-fill {
+            height: 100%;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #43a047, #2e7d32);
+            transition: width 0.8s ease;
+        }
+
+        .top-predictions { margin-top: 20px; }
+        .top-predictions h3 { font-size: 0.9rem; color: #666; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .pred-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .pred-item:last-child { border-bottom: none; }
+        .pred-rank {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #e8f5e9;
+            color: #2e7d32;
+            font-weight: 700;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pred-rank.rank-1 { background: #2e7d32; color: white; }
+        .pred-name { flex: 1; font-weight: 500; }
+        .pred-prob { font-weight: 700; color: #2e7d32; font-size: 0.95rem; }
+
+        .gradcam-section { margin-top: 20px; }
+        .gradcam-section h3 { margin-bottom: 12px; font-size: 1rem; color: #444; }
+        #gradcam-img {
+            max-width: 100%;
+            border-radius: 10px;
+            border: 2px solid #e8f5e9;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 32px;
+            display: none;
+        }
+        .spinner {
+            width: 48px; height: 48px;
+            border: 5px solid #e8f5e9;
+            border-top-color: #2e7d32;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        .info-card {
+            background: #f9fff9;
+            border-radius: 10px;
+            padding: 16px;
+            border-left: 4px solid #43a047;
+        }
+        .info-card h4 { font-size: 0.85rem; color: #666; margin-bottom: 4px; }
+        .info-card p  { font-size: 1rem; font-weight: 600; color: #2e7d32; }
+
+        footer {
+            text-align: center;
+            padding: 24px;
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 600px) {
+            header { padding: 16px 20px; }
+            .card { padding: 20px; }
+            .container { margin: 20px auto; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">🌾</div>
+    <div>
+        <h1>Rice Leaf Disease Classifier</h1>
+        <p>AI-powered detection using VGG16 Deep Learning · Free for everyone</p>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- Upload Card -->
+    <div class="card">
+        <h2 style="margin-bottom: 20px; color: #2e7d32;">📤 Upload a Rice Leaf Image</h2>
+
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+            <div class="icon">🍃</div>
+            <p><strong>Click to upload</strong> or drag & drop your image here</p>
+            <small>Supported formats: JPG, PNG, WebP · Max size: 10MB</small>
+        </div>
+        <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.webp" />
+
+        <!-- Preview Section -->
+        <div id="preview-section" style="margin-top: 24px;">
+            <img id="preview-img" src="" alt="Preview" />
+            <button class="btn" id="predictBtn" onclick="runPrediction()">
+                🔍 Analyze Disease
+            </button>
+            <button class="btn btn-secondary" onclick="resetUI()">
+                ↩ Upload Different Image
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p style="color: #666;">Analyzing your rice leaf image...</p>
+    </div>
+
+    <!-- Results Card -->
+    <div class="card" id="result-section">
+        <h2 style="margin-bottom: 20px; color: #2e7d32;">🔬 Diagnosis Results</h2>
+
+        <div style="text-align: center; margin-bottom: 16px;">
+            <div class="disease-badge" id="disease-badge">—</div>
+            <div style="font-size: 2rem; font-weight: 800; color: #2e7d32;" id="confidence-pct">—</div>
+            <div style="color: #888; font-size: 0.9rem;">Confidence</div>
+        </div>
+
+        <div class="confidence-bar">
+            <div class="confidence-fill" id="confidence-fill" style="width: 0%"></div>
+        </div>
+
+        <div class="info-grid" style="margin-top: 20px;" id="info-grid"></div>
+
+        <div class="top-predictions">
+            <h3>All Predictions</h3>
+            <div id="top-predictions-list"></div>
+        </div>
+
+        <div class="gradcam-section" id="gradcam-section" style="display:none;">
+            <h3>🔥 Grad-CAM: What the model focused on</h3>
+            <img id="gradcam-img" src="" alt="Grad-CAM heatmap" />
+        </div>
+    </div>
+
+    <!-- Disease Info Card -->
+    <div class="card">
+        <h2 style="margin-bottom: 16px; color: #2e7d32;">📚 About Rice Leaf Diseases</h2>
+        <div class="info-grid">
+            <div class="info-card">
+                <h4>🔴 Bacterial Blight</h4>
+                <p style="font-size: 0.85rem; color: #444; font-weight: 400;">Caused by <em>Xanthomonas oryzae</em>. Yellow, water-soaked lesions. Can reduce yield by up to 75%.</p>
+            </div>
+            <div class="info-card">
+                <h4>🟠 Blast</h4>
+                <p style="font-size: 0.85rem; color: #444; font-weight: 400;">Caused by <em>Magnaporthe oryzae</em>. Diamond-shaped lesions. Most destructive rice disease worldwide.</p>
+            </div>
+            <div class="info-card">
+                <h4>🟤 Brown Spot</h4>
+                <p style="font-size: 0.85rem; color: #444; font-weight: 400;">Caused by <em>Bipolaris oryzae</em>. Small dark brown lesions. Worsens with nutrient deficiency.</p>
+            </div>
+            <div class="info-card">
+                <h4>🟡 Tungro</h4>
+                <p style="font-size: 0.85rem; color: #444; font-weight: 400;">Viral disease (RTBV + RTSV). Yellow-orange leaves, stunted growth. Spread by leafhoppers.</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    Built for MSc Thesis — East West University · Md. Rakib Ahmed · Free & Open Access
+</footer>
+
+<script>
+    // Disease class metadata
+    const DISEASE_INFO = {
+        "Bacterial Blight": { color: "Bacterial-Blight", advice: "Apply copper-based bactericides. Improve field drainage." },
+        "Blast":            { color: "Blast",            advice: "Use fungicides (tricyclazole). Avoid excessive nitrogen." },
+        "Brown Spot":       { color: "Brown-Spot",       advice: "Apply potassium fertilizer. Use fungicide if severe." },
+        "Tungro":           { color: "Tungro",           advice: "Control leafhopper vectors. Use resistant varieties." },
+    };
+
+    let selectedFile = null;
+
+    // Drag & Drop
+    const uploadZone = document.getElementById('uploadZone');
+    uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone.addEventListener('drop', e => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file) handleFile(file);
+    });
+
+    document.getElementById('fileInput').addEventListener('change', e => {
+        if (e.target.files[0]) handleFile(e.target.files[0]);
+    });
+
+    function handleFile(file) {
+        selectedFile = file;
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('preview-img').src = e.target.result;
+            document.getElementById('preview-section').style.display = 'block';
+            uploadZone.style.display = 'none';
+            document.getElementById('result-section').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function runPrediction() {
+        if (!selectedFile) return;
+
+        document.getElementById('predictBtn').disabled = true;
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('result-section').style.display = 'none';
+
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        try {
+            // Run normal prediction
+            const res = await fetch('/predict', { method: 'POST', body: formData });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.detail || 'Prediction failed');
+            }
+            const data = await res.json();
+            displayResults(data);
+
+            // Also try Grad-CAM (non-blocking)
+            tryGradCam(selectedFile);
+
+        } catch (err) {
+            alert(`Error: ${err.message}`);
+        } finally {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('predictBtn').disabled = false;
+        }
+    }
+
+    async function tryGradCam(file) {
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await fetch('/predict-with-gradcam', { method: 'POST', body: formData });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.gradcam_image_url) {
+                    document.getElementById('gradcam-img').src = data.gradcam_image_url;
+                    document.getElementById('gradcam-section').style.display = 'block';
+                }
+            }
+        } catch (e) { /* Grad-CAM is optional */ }
+    }
+
+    function displayResults(data) {
+        const disease = data.predicted_class;
+        const conf    = data.confidence;
+        const info    = DISEASE_INFO[disease] || { color: "Blast", advice: "" };
+
+        // Badge
+        const badge = document.getElementById('disease-badge');
+        badge.textContent = disease;
+        badge.className = `disease-badge disease-${info.color}`;
+
+        // Confidence
+        document.getElementById('confidence-pct').textContent = `${(conf * 100).toFixed(1)}%`;
+        document.getElementById('confidence-fill').style.width = `${(conf * 100).toFixed(1)}%`;
+
+        // Info grid
+        document.getElementById('info-grid').innerHTML = `
+            <div class="info-card">
+                <h4>⚡ Inference Time</h4>
+                <p>${data.inference_time_ms.toFixed(0)} ms</p>
+            </div>
+            <div class="info-card">
+                <h4>💊 Recommended Action</h4>
+                <p style="font-size: 0.85rem; font-weight: 400;">${info.advice}</p>
+            </div>
+        `;
+
+        // Top predictions
+        const listEl = document.getElementById('top-predictions-list');
+        listEl.innerHTML = data.top_predictions.map((p, i) => `
+            <div class="pred-item">
+                <div class="pred-rank ${i === 0 ? 'rank-1' : ''}">${i + 1}</div>
+                <div class="pred-name">${p.class}</div>
+                <div class="pred-prob">${(p.probability * 100).toFixed(2)}%</div>
+            </div>
+        `).join('');
+
+        document.getElementById('result-section').style.display = 'block';
+    }
+
+    function resetUI() {
+        selectedFile = null;
+        document.getElementById('fileInput').value = '';
+        document.getElementById('preview-section').style.display = 'none';
+        document.getElementById('result-section').style.display = 'none';
+        document.getElementById('gradcam-section').style.display = 'none';
+        uploadZone.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>

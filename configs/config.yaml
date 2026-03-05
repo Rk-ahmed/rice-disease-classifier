@@ -1,0 +1,113 @@
+# =============================================================================
+# Rice Leaf Disease Classification — Master Configuration
+# =============================================================================
+# All project settings live here. Change this file, not the source code.
+# =============================================================================
+
+project:
+  name: "Rice Leaf Disease Classifier"
+  version: "1.0.0"
+  author: "Md. Rakib Ahmed"
+  random_seed: 42
+
+# -----------------------------------------------------------------------------
+# Dataset
+# -----------------------------------------------------------------------------
+data:
+  # Path to your raw dataset folder (contains one sub-folder per class)
+  raw_dir: "data/raw/Rice Leaf Disease Images"
+  processed_dir: "data/processed"
+  split_dir: "data/splits"
+
+  # Disease classes — must match your folder names exactly
+  classes:
+    - "Bacterialblight"
+    - "Blast"
+    - "Brownspot"
+    - "Tungro"
+
+  # Train / Validation / Test split ratios (must sum to 1.0)
+  train_ratio: 0.60
+  val_ratio:   0.20
+  test_ratio:  0.20
+
+  image_size: [224, 224]   # (height, width) — standard for VGG16, ResNet50, etc.
+  batch_size: 32
+
+# -----------------------------------------------------------------------------
+# Data Augmentation (applied only to training data)
+# -----------------------------------------------------------------------------
+augmentation:
+  rotation_range: 40
+  width_shift_range: 0.2
+  height_shift_range: 0.2
+  shear_range: 0.2
+  zoom_range: 0.2
+  horizontal_flip: true
+  brightness_range: [0.5, 1.5]
+  fill_mode: "nearest"
+
+# -----------------------------------------------------------------------------
+# Models to train and compare
+# -----------------------------------------------------------------------------
+models:
+  # Set "enabled: true" to include a model in the comparison run
+  vgg16:
+    enabled: true
+    unfreeze_last_n_layers: 4
+    dense_units: 1024
+    dropout_rate: 0.5
+  resnet50:
+    enabled: true
+    unfreeze_last_n_layers: 10
+    dense_units: 1024
+    dropout_rate: 0.5
+  inceptionv3:
+    enabled: true
+    unfreeze_last_n_layers: 10
+    dense_units: 1024
+    dropout_rate: 0.5
+  xception:
+    enabled: true
+    unfreeze_last_n_layers: 10
+    dense_units: 1024
+    dropout_rate: 0.5
+
+# -----------------------------------------------------------------------------
+# Training Hyperparameters
+# -----------------------------------------------------------------------------
+training:
+  epochs: 30
+  learning_rate: 0.0001
+  optimizer: "adam"          # options: adam, sgd, rmsprop
+  loss: "categorical_crossentropy"
+  use_class_weights: true    # handles class imbalance automatically
+
+  # Cross-validation
+  n_folds: 5
+  use_cross_validation: true
+
+  # Callbacks
+  early_stopping_patience: 10
+  reduce_lr_patience: 5
+  reduce_lr_factor: 0.2
+  min_lr: 0.000001
+
+# -----------------------------------------------------------------------------
+# Output Paths
+# -----------------------------------------------------------------------------
+outputs:
+  models_dir: "outputs/models"
+  plots_dir: "outputs/plots"
+  reports_dir: "outputs/reports"
+  logs_dir: "outputs/logs"
+
+# -----------------------------------------------------------------------------
+# Web Application
+# -----------------------------------------------------------------------------
+app:
+  host: "0.0.0.0"
+  port: 8000
+  debug: false
+  max_upload_size_mb: 10
+  allowed_extensions: ["jpg", "jpeg", "png", "webp"]

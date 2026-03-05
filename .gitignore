@@ -1,0 +1,58 @@
+# =============================================================================
+# Git Ignore — Rice Leaf Disease Classifier
+# =============================================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+.pytest_cache/
+
+# Virtual Environment
+venv/
+env/
+.env
+*.env
+
+# Data (large files — store separately or use Git LFS)
+data/raw/
+data/processed/
+data/splits/
+
+# Model files (large — upload to HuggingFace Hub or Google Drive)
+outputs/models/
+*.h5
+*.keras
+*.pb
+
+# Generated outputs (reproducible from code)
+outputs/plots/
+outputs/reports/
+outputs/logs/
+
+# Uploaded images (user data)
+app/static/uploads/*
+!app/static/uploads/.gitkeep
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+htmlcov/
+.coverage
