@@ -81,7 +81,7 @@ async def root():
     """Serve the main web UI."""
     html_path = Path("app/templates/index.html")
     if html_path.exists():
-        return html_path.read_text()
+        return html_path.read_text(encoding="utf-8")
     return "<h1>Rice Leaf Disease Classifier API</h1><p>Visit /docs for API documentation.</p>"
 
 
