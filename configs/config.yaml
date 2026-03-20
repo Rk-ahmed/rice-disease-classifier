@@ -97,7 +97,7 @@ training:
 # Output Paths
 # -----------------------------------------------------------------------------
 outputs:
-  models_dir: "outputs/models"
+  models_dir: "outputs/models/vgg16/final_VGG16.keras"
   plots_dir: "outputs/plots"
   reports_dir: "outputs/reports"
   logs_dir: "outputs/logs"

@@ -66,7 +66,7 @@ predictor = None
 async def startup_event():
     """Load model when server starts."""
     global predictor
-    model_path = os.getenv("MODEL_PATH", "outputs/models/vgg16/final_vgg16.keras")
+    model_path = os.getenv("MODEL_PATH", "outputs/models/vgg16/final_VGG16.keras")
     logger.info(f"Loading model from: {model_path}")
     predictor = RiceLeafPredictor(model_path=model_path)
     logger.info("Model loaded successfully. Server ready.")
