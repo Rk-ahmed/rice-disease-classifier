@@ -28,6 +28,14 @@ pinned: false
 
 This project implements a production-grade deep learning system for **automated classification of rice leaf diseases**. It compares four state-of-the-art CNN architectures using transfer learning, and deploys the best-performing model as a free, publicly accessible web application.
 
+## 🚀 Live Demo
+
+**Try the app here:** https://huggingface.co/spaces/rakib-ahmed/rice-disease-classifier
+
+Upload any rice leaf image and get instant disease classification with confidence scores.
+
+---
+
 **Detectable Diseases:**
 | Disease | Pathogen | Visual Symptoms |
 |---------|----------|-----------------|
